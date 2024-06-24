@@ -56,7 +56,7 @@ public class GraveManager {
     }
 
     public static boolean shouldSpawnGrave(Player player) {
-        return !player.level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY) && !player.isSpectator();
+        return !player.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY) && !player.isSpectator();
 
     }
 
@@ -83,12 +83,12 @@ public class GraveManager {
         if (latestGraveEntry == null)
             return;
 
-        WorldGraveData worldData = getWorldGraveData(player.level);
+        WorldGraveData worldData = getWorldGraveData(player.level());
         GraveEntity grave = GraveEntity.createGrave(player, latestGraveEntry.dataList);
         ModRef.LOGGER.debug("Attempting to spawn grave for " + player.getName().getString() + " at " + grave.blockPosition());
         latestGraveEntry.graveUUID = grave.getUUID();
         latestGraveEntry.gravePos = grave.blockPosition();
-        if (!player.level.addFreshEntity(grave)) {
+        if (!player.level().addFreshEntity(grave)) {
             ModRef.LOGGER.warn("Could not spawn grave for " + player.getName().getString());
         } else {
             ModRef.LOGGER.info("Spawned grave for " + player.getName().getString() + " at " + grave.blockPosition());
@@ -143,7 +143,7 @@ public class GraveManager {
     }
 
     public static void setGraveRestored(UUID player, GraveEntity grave) {
-        LinkedList<PlayerGraveEntry> entries = getWorldGraveData(grave.level).getGraveEntriesForPlayer(player);
+        LinkedList<PlayerGraveEntry> entries = getWorldGraveData(grave.level()).getGraveEntriesForPlayer(player);
         // The entry may not be present after death if the clear command is used before the retrieval of the grave.
         if (entries != null) {
             entries.stream()
@@ -162,7 +162,7 @@ public class GraveManager {
         GraveConfigs.Common configs = GraveConfigs.COMMON;
         // First, try to find the first non-air block below the death point
         // and return the air block above that.
-        for (BlockPos.MutableBlockPos pos = new BlockPos(deathPos.x, Math.round(deathPos.y), deathPos.z).mutable(); pos.getY() > world.getMinBuildHeight(); pos = pos.move(Direction.DOWN)) {
+        for (BlockPos.MutableBlockPos pos = new BlockPos((int) deathPos.x, (int) Math.round(deathPos.y), (int) deathPos.z).mutable(); pos.getY() > world.getMinBuildHeight(); pos = pos.move(Direction.DOWN)) {
             BlockPos belowPos = new BlockPos(pos).below();
             BlockState belowState = world.getBlockState(belowPos);
             if (blocksMovement(belowState)) {
@@ -173,7 +173,7 @@ public class GraveManager {
 
         // If there are no non-air blocks below the death point,
         // then scan the range around the backup position
-        BlockPos pos = new BlockPos(deathPos.x, configs.scanHeight.get(), deathPos.z);
+        BlockPos pos = new BlockPos((int) deathPos.x, configs.scanHeight.get(), (int)deathPos.z);
         for (int scan = 0; scan < configs.scanRange.get(); scan++) {
             // First check above the scan
             BlockPos scanPos = new BlockPos(pos).above(scan);
@@ -206,10 +206,10 @@ public class GraveManager {
 
         // If no position was selected, drop the grave at the bottom
         outPos.set(deathPos.x, world.getMinBuildHeight() + 1, deathPos.z);
-        return !world.getBlockState(new BlockPos(deathPos.x, 0, deathPos.z)).getMaterial().blocksMotion();
+        return !world.getBlockState(new BlockPos((int) deathPos.x, 0, (int) deathPos.z)).blocksMotion();
     }
 
     private static boolean blocksMovement(BlockState state) {
-        return state.getMaterial().blocksMotion();
+        return state.blocksMotion();
     }
 }

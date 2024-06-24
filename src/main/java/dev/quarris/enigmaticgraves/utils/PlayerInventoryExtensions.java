@@ -46,7 +46,7 @@ public class PlayerInventoryExtensions {
     private static int addResource(Inventory inventory, int slot, ItemStack stack) {
         ItemStack itemstack = inventory.getItem(slot);
 
-        if (!itemstack.isEmpty() && !(itemstack.sameItem(stack) && ItemStack.tagMatches(itemstack, stack))) {
+        if (!itemstack.isEmpty() && !(ItemStack.matches(stack, itemstack) && ItemStack.isSameItemSameTags(itemstack, stack))) {
             return stack.getCount();
         }
 

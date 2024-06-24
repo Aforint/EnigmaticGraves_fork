@@ -29,8 +29,8 @@ public class CommonEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onPlayerDeathFirst(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof Player) ||
-            event.getEntity().level.isClientSide ||
-            event.getEntity().level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) return;
+            event.getEntity().level().isClientSide ||
+            event.getEntity().level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) return;
 
         GraveManager.droppedItems = new ArrayList<>();
     }
@@ -38,7 +38,7 @@ public class CommonEvents {
     // Once everything is collected, check to see if someone has cancelled the event, if it was cancelled then the player has not actually died, and we have to ignore any items we have collected.
     @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
     public static void onPlayerDeathLast(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof Player) || event.getEntity().level.isClientSide)
+        if (!(event.getEntity() instanceof Player) || event.getEntity().level().isClientSide)
             return;
 
         if (event.isCanceled()) {
@@ -59,7 +59,7 @@ public class CommonEvents {
             return;
 
         ItemStack graveFinder = new ItemStack(Registry.GRAVE_FINDER_ITEM.get());
-        LinkedList<PlayerGraveEntry> entries = GraveManager.getWorldGraveData(event.getEntity().level).getGraveEntriesForPlayer(event.getEntity().getUUID());
+        LinkedList<PlayerGraveEntry> entries = GraveManager.getWorldGraveData(event.getEntity().level()).getGraveEntriesForPlayer(event.getEntity().getUUID());
 
         if (entries == null || entries.isEmpty())
             return;

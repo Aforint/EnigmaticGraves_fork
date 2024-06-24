@@ -65,7 +65,7 @@ public class GraveEntryArgument implements ArgumentType<Integer> {
         if (context.getSource() instanceof CommandSourceStack) {
             try {
                 ServerPlayer player = ((CommandSourceStack) context.getSource()).getPlayerOrException();
-                LinkedList<PlayerGraveEntry> entries = GraveManager.getWorldGraveData(player.level).getGraveEntriesForPlayer(player.getUUID());
+                LinkedList<PlayerGraveEntry> entries = GraveManager.getWorldGraveData(player.level()).getGraveEntriesForPlayer(player.getUUID());
                 if (entries == null) {
                     return Suggestions.empty();
                 }

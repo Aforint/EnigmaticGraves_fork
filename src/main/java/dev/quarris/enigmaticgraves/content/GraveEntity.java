@@ -11,6 +11,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -45,12 +46,12 @@ public class GraveEntity extends Entity {
     public static GraveEntity createGrave(Player player, List<IGraveData> graveData) {
         GraveEntity grave = new GraveEntity(player);
         BlockPos.MutableBlockPos spawnPos = new BlockPos.MutableBlockPos();
-        boolean spawnBlockBelow = GraveManager.getSpawnPosition(player.level, player.position(), spawnPos);
+        boolean spawnBlockBelow = GraveManager.getSpawnPosition(player.level(), player.position(), spawnPos);
         if (spawnBlockBelow) {
             ResourceLocation blockName = new ResourceLocation(GraveConfigs.COMMON.graveFloorBlock.get());
             BlockState state = ForgeRegistries.BLOCKS.getValue(blockName).defaultBlockState();
-            player.level.setBlock(spawnPos.below(), state, 3);
-            player.level.levelEvent(2001, spawnPos, Block.getId(state));
+            player.level().setBlock(spawnPos.below(), state, 3);
+            player.level().levelEvent(2001, spawnPos, Block.getId(state));
         }
         grave.setRot(player.getXRot(), 0);
         grave.setPos(spawnPos.getX() + player.getBbWidth() / 2, spawnPos.getY(), spawnPos.getZ() + player.getBbWidth() / 2);
@@ -63,16 +64,16 @@ public class GraveEntity extends Entity {
     }
 
     public GraveEntity(Player player) {
-        this(Registry.GRAVE_ENTITY_TYPE.get(), player.level);
+        this(Registry.GRAVE_ENTITY_TYPE.get(), player.level());
         this.setOwner(player);
     }
 
     @Override
     public void tick() {
-        if (!this.level.isClientSide()) {
-            if (GraveManager.getWorldGraveData(this.level).isGraveRestored(this.getUUID())) {
+        if (!this.level().isClientSide()) {
+            if (GraveManager.getWorldGraveData(this.level()).isGraveRestored(this.getUUID())) {
                 this.remove(RemovalReason.DISCARDED);
-                GraveManager.getWorldGraveData(this.level).removeGraveRestored(this.getUUID());
+                GraveManager.getWorldGraveData(this.level()).removeGraveRestored(this.getUUID());
             }
         }
         super.tick();
@@ -80,7 +81,7 @@ public class GraveEntity extends Entity {
 
     @Override
     public boolean isCurrentlyGlowing() {
-        return this.level.isClientSide ? ClientHelper.shouldGlowOnClient(this) : super.isCurrentlyGlowing();
+        return this.level().isClientSide ? ClientHelper.shouldGlowOnClient(this) : super.isCurrentlyGlowing();
     }
 
     @Override
@@ -107,14 +108,14 @@ public class GraveEntity extends Entity {
     public InteractionResult interact(Player player, InteractionHand hand) {
         if (this.belongsTo(player)) {
             this.restoreGrave(player);
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
 
         if (player.isCreative()) {
             ItemStack heldItem = player.getItemInHand(hand);
             if (heldItem.getItem() == Registry.GRAVE_FINDER_ITEM.get() && !heldItem.hasTag()) {
                 this.remove(RemovalReason.DISCARDED);
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
         }
 
@@ -122,7 +123,7 @@ public class GraveEntity extends Entity {
     }
 
     private void restoreGrave(Player player) {
-        if (!this.isAlive() || this.level.isClientSide())
+        if (!this.isAlive() || this.level().isClientSide())
             return;
 
         // Remove the corresponding grave finder from the player inventory
@@ -152,7 +153,7 @@ public class GraveEntity extends Entity {
     @Override
     public void remove(RemovalReason reason) {
         super.remove(reason);
-        if (!this.level.isClientSide && !this.restored) {
+        if (!this.level().isClientSide && !this.restored) {
             ModRef.LOGGER.warn("Grave at {} was removed without being restored!", this.blockPosition());
         }
     }
@@ -223,7 +224,7 @@ public class GraveEntity extends Entity {
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 }

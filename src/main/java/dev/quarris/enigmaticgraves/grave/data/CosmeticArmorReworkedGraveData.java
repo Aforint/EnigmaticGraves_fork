@@ -26,7 +26,7 @@ public class CosmeticArmorReworkedGraveData implements IGraveData {
 
             for (int slot = 0; slot < caStacksBase.getSlots(); slot++){
                 ItemStack stack = caStacksBase.getStackInSlot(slot);
-                if (ItemStack.isSame(stack, drop)) {
+                if (ItemStack.matches(stack, drop)) {
                     ite.remove();
                 }
             }

@@ -43,7 +43,7 @@ public class CurioGraveData implements IGraveData {
                         continue;
 
                     ItemStack stack = curioItems.getStacks().getStackInSlot(slot);
-                    if (ItemStack.isSame(stack, drop)) {
+                    if (ItemStack.matches(stack, drop)) {
                         stackSlotsChecked.add(slot);
                         curioStacksList.set(slot, drop);
                         ite.remove();
@@ -55,7 +55,7 @@ public class CurioGraveData implements IGraveData {
                         continue;
 
                     ItemStack stack = curioItems.getCosmeticStacks().getStackInSlot(slot);
-                    if (ItemStack.isSame(stack, drop)) {
+                    if (ItemStack.matches(stack, drop)) {
                         cosmeticStacksSlotsChecked.add(slot);
                         curioCosmeticStacksList.set(slot, drop);
                         ite.remove();
@@ -74,7 +74,7 @@ public class CurioGraveData implements IGraveData {
     public void restore(Player player) {
         if (this.data == null) return;
 
-        LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosHelper().getCuriosHandler(player);
+        LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosInventory(player);
         optional.ifPresent(handler -> {
             handler.getCurios().values().forEach(curio -> {
                 IDynamicStackHandler stacks = curio.getStacks();

@@ -35,7 +35,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
         this.captureDrops(new java.util.ArrayList<>());
 
         boolean flag = this.lastHurt > 0;
-        if (!this.isBaby() && this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
+        if (!this.isBaby() && this.level().getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
             this.dropFromLootTable(damageSourceIn, flag);
             this.dropCustomDeathLoot(damageSourceIn, i, flag);
         }

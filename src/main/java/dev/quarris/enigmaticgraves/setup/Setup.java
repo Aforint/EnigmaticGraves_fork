@@ -40,13 +40,13 @@ public class Setup {
     @SubscribeEvent
     public static void gatherData(GatherDataEvent event) {
         if (event.includeClient()) {
-            event.getGenerator().addProvider(true, new ItemModelProvider(event.getGenerator(), ModRef.ID, event.getExistingFileHelper()) {
+            event.getGenerator().addProvider(true, new ItemModelProvider(event.getGenerator().getPackOutput(), ModRef.ID, event.getExistingFileHelper()) {
                 @Override
                 protected void registerModels() {
                     this.singleTexture(Registry.GRAVE_FINDER_ITEM.getId().getPath(), new ResourceLocation("item/generated"), "layer0", new ResourceLocation(ModRef.ID, "grave_finder"));
                 }
             });
-            event.getGenerator().addProvider(true, new LanguageProvider(event.getGenerator(), ModRef.ID, "en_us") {
+            event.getGenerator().addProvider(true, new LanguageProvider(event.getGenerator().getPackOutput(), ModRef.ID, "en_us") {
                 @Override
                 protected void addTranslations() {
                     this.addItem(Registry.GRAVE_FINDER_ITEM, "Grave Finder");

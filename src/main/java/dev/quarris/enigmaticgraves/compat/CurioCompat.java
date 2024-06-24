@@ -18,7 +18,7 @@ public class CurioCompat {
     public static final Map<UUID, ICuriosItemHandler> CACHED_CURIOS = new HashMap<>();
 
     public static void cacheCurios(Player player) {
-        CuriosApi.getCuriosHelper().getCuriosHandler(player).ifPresent(handler -> {
+        CuriosApi.getCuriosInventory(player).ifPresent(handler -> {
             CurioInventoryCapability.CurioInventoryWrapper cached = new CurioInventoryCapability.CurioInventoryWrapper(player);
             cached.readTag(handler.writeTag());
             CACHED_CURIOS.put(player.getUUID(), cached);
