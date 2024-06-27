@@ -2,6 +2,7 @@ package dev.quarris.enigmaticgraves.grave;
 
 import dev.quarris.enigmaticgraves.config.GraveConfigs;
 import dev.quarris.enigmaticgraves.utils.ModRef;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -56,7 +57,7 @@ public class WorldGraveData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag compound) {
+    public CompoundTag save(CompoundTag compound, HolderLookup.Provider provider) {
         ListTag playerGraveEntriesNBT = new ListTag();
         for (UUID uuid : this.playerGraveEntries.keySet()) {
             CompoundTag playerGravesNBT = new CompoundTag();
@@ -64,7 +65,7 @@ public class WorldGraveData extends SavedData {
             List<PlayerGraveEntry> entries = this.playerGraveEntries.get(uuid);
             ListTag entriesNBT = new ListTag();
             for (PlayerGraveEntry entry : entries) {
-                entriesNBT.add(entry.serializeNBT());
+                entriesNBT.add(entry.serializeNBT(provider));
             }
             playerGravesNBT.put("Entries", entriesNBT);
             playerGraveEntriesNBT.add(playerGravesNBT);
@@ -79,13 +80,13 @@ public class WorldGraveData extends SavedData {
         return compound;
     }
 
-    public static WorldGraveData load(CompoundTag tag) {
+    public static WorldGraveData load(CompoundTag tag, HolderLookup.Provider provider) {
         WorldGraveData data = new WorldGraveData();
-        data.loadInternal(tag);
+        data.loadInternal(tag, provider);
         return data;
     }
 
-    public void loadInternal(CompoundTag nbt) {
+    public void loadInternal(CompoundTag nbt, HolderLookup.Provider provider) {
         this.playerGraveEntries.clear();
         this.restoredGraves.clear();
         ListTag playerGraveEntriesNBT = nbt.getList("PlayerGraveEntries", Tag.TAG_COMPOUND);
@@ -96,7 +97,7 @@ public class WorldGraveData extends SavedData {
             LinkedList<PlayerGraveEntry> entries = this.playerGraveEntries.computeIfAbsent(uuid, k -> new LinkedList<>());
             for (int i = 0; i < entriesNBT.size(); i++) {
                 CompoundTag entryNBT = entriesNBT.getCompound(i);
-                PlayerGraveEntry entry = new PlayerGraveEntry(entryNBT);
+                PlayerGraveEntry entry = new PlayerGraveEntry(provider, entryNBT);
                 entries.addLast(entry);
             }
         }

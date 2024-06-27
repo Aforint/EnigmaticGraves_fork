@@ -2,6 +2,7 @@ package dev.quarris.enigmaticgraves.content;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.*;
@@ -13,6 +14,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
@@ -25,17 +27,15 @@ public class GraveFinderItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-        if (worldIn == null)
-            return;
-
-        CompoundTag nbt = stack.getTag();
-        if (nbt == null) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext pContext, List<Component> tooltip, TooltipFlag flagIn) {
+        CustomData data = stack.get(DataComponents.ENTITY_DATA);
+        if (data == null) {
             tooltip.add(Component.translatable("info.grave.remove_grave"));
             return;
         }
+        CompoundTag nbt = data.copyTag();
         if (nbt.contains("Pos")) {
-            BlockPos bp = NbtUtils.readBlockPos(nbt.getCompound("Pos"));
+            BlockPos bp = NbtUtils.readBlockPos(nbt,"Pos").get();
             tooltip.add(Component.literal("X: " + bp.getX() + ", Y: " + bp.getY() + ", Z: " + bp.getZ()));
         } else {
             tooltip.add(Component.translatable("info.grave.not_found"));
@@ -49,13 +49,13 @@ public class GraveFinderItem extends Item {
             return InteractionResultHolder.pass(stack);
         }
 
-        if (!stack.hasTag() || !stack.getTag().contains("Pos")) {
+        if (!stack.has(DataComponents.ENTITY_DATA) || !stack.get(DataComponents.ENTITY_DATA).copyTag().contains("Pos")) {
             return InteractionResultHolder.pass(stack);
         }
 
         player.startUsingItem(hand);
         if (level instanceof ServerLevel) {
-            BlockPos pos = NbtUtils.readBlockPos(stack.getTag().getCompound("Pos"));
+            BlockPos pos = NbtUtils.readBlockPos(stack.get(DataComponents.ENTITY_DATA).copyTag(), "Pos").get();
             Component result = ComponentUtils.wrapInSquareBrackets(Component.translatable("chat.coordinates", pos.getX(), pos.getY(), pos.getZ()))
                 .withStyle((style) -> style.withColor(ChatFormatting.GREEN)
                     .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tp @s " + pos.getX() + " " + pos.getY() + " " + pos.getZ()))

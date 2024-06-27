@@ -1,46 +1,48 @@
 package dev.quarris.enigmaticgraves.config;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
-import static net.minecraftforge.common.ForgeConfigSpec.*;
+import java.util.Objects;
+
 
 public class GraveConfigs {
 
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec SPEC;
     public static final Common COMMON;
 
     static {
-        Pair<Common, ForgeConfigSpec> specPair = new Builder().configure(Common::new);
+        Pair<Common, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(Common::new);
         SPEC = specPair.getRight();
         COMMON = specPair.getLeft();
     }
 
-    public static class Common {
+    public static class Common{
 
         // Misc
-        public BooleanValue spawnGraveFinder;
-        public BooleanValue sneakRetrieval;
+        public ModConfigSpec.BooleanValue spawnGraveFinder;
+        public ModConfigSpec.BooleanValue sneakRetrieval;
 
         // Data
-        public EnumValue<ExperienceHandling> experienceGraveHandling;
-        public IntValue graveEntryCount;
+        public ModConfigSpec.EnumValue<ExperienceHandling> experienceGraveHandling;
+        public ModConfigSpec.IntValue graveEntryCount;
 
         // Position
-        public IntValue scanHeight;    // The y height to start scanning from
-        public ConfigValue<String> graveFloorBlock; // Block to spawn below the grave if there is none
-        public IntValue scanRange;    // Scan range (+- from start height)
+        public ModConfigSpec.IntValue scanHeight;    // The y height to start scanning from
+        public ModConfigSpec.ConfigValue<String> graveFloorBlock; // Block to spawn below the grave if there is none
+        public ModConfigSpec.IntValue scanRange;    // Scan range (+- from start height)
 
-        public Common(Builder builder) {
+        public Common(ModConfigSpec.Builder builder) {
             builder.comment("Misc Options").push("misc");
             this.spawnGraveFinder = builder.comment(
-                "Should you get a grave finder item after you respawn?"
+                    "Should you get a grave finder item after you respawn?"
             ).define("spawnGraveFinder", true);
             this.sneakRetrieval = builder.comment(
-                "Set to false to disable retrieval by sneaking on top of the grave."
+                    "Set to false to disable retrieval by sneaking on top of the grave."
             ).define("sneakRetrieval", true);
             builder.pop();
             builder.comment("How the grave data is handled").push("data");
@@ -75,10 +77,10 @@ public class GraveConfigs {
             ).defineInRange("scanRange", 10, -64, 319);
             this.graveFloorBlock = builder.comment(
                     "The block that should spawn below the grave if there is none"
-            ).define("floorBlock", ForgeRegistries.BLOCKS.getKey(Blocks.DIRT).toString(), obj -> {
+            ).define("floorBlock", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT).toString(), obj -> {
                 if (!(obj instanceof String))
                     return false;
-                return ForgeRegistries.BLOCKS.containsKey(new ResourceLocation(obj.toString()));
+                return BuiltInRegistries.BLOCK.containsKey(Objects.requireNonNull(ResourceLocation.tryParse(obj.toString())));
             });
             builder.pop();
         }

@@ -5,16 +5,17 @@ import dev.quarris.enigmaticgraves.content.GraveEntityRenderer;
 import dev.quarris.enigmaticgraves.content.GraveModel;
 import dev.quarris.enigmaticgraves.utils.ModRef;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.client.model.generators.ItemModelProvider;
-import net.minecraftforge.common.data.LanguageProvider;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
+import net.neoforged.neoforge.common.data.LanguageProvider;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 
-@Mod.EventBusSubscriber(modid = ModRef.ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = ModRef.ID, bus = EventBusSubscriber.Bus.MOD)
 public class Setup {
 
     @SubscribeEvent
@@ -43,7 +44,10 @@ public class Setup {
             event.getGenerator().addProvider(true, new ItemModelProvider(event.getGenerator().getPackOutput(), ModRef.ID, event.getExistingFileHelper()) {
                 @Override
                 protected void registerModels() {
-                    this.singleTexture(Registry.GRAVE_FINDER_ITEM.getId().getPath(), new ResourceLocation("item/generated"), "layer0", new ResourceLocation(ModRef.ID, "grave_finder"));
+                    this.singleTexture(Registry.GRAVE_FINDER_ITEM.getId().getPath(),
+                            ResourceLocation.withDefaultNamespace("item/generated"),
+                            "layer0", ResourceLocation.fromNamespaceAndPath(ModRef.ID,
+                            "grave_finder"));
                 }
             });
             event.getGenerator().addProvider(true, new LanguageProvider(event.getGenerator().getPackOutput(), ModRef.ID, "en_us") {

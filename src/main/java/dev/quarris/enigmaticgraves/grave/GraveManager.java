@@ -1,5 +1,6 @@
 package dev.quarris.enigmaticgraves.grave;
 
+import com.ibm.icu.impl.ICUService;
 import dev.quarris.enigmaticgraves.compat.CompatManager;
 import dev.quarris.enigmaticgraves.compat.CosmeticArmorReworkedCompat;
 import dev.quarris.enigmaticgraves.compat.CurioCompat;
@@ -10,28 +11,31 @@ import dev.quarris.enigmaticgraves.grave.data.*;
 import dev.quarris.enigmaticgraves.utils.ModRef;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.phys.Vec3;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class GraveManager {
 
     public static final HashMap<ResourceLocation, Function<CompoundTag, IGraveData>> GRAVE_DATA_SUPPLIERS = new HashMap<>();
     public static PlayerGraveEntry latestGraveEntry;
-    public static List<ItemStack> droppedItems;
     public static final DateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss");
 
     public static void init() {
@@ -49,7 +53,7 @@ public class GraveManager {
         if (world instanceof ServerLevel) {
             MinecraftServer server = ((ServerLevel) world).getServer();
             ServerLevel overworld = server.getLevel(Level.OVERWORLD);
-            return overworld.getDataStorage().computeIfAbsent(WorldGraveData::load, WorldGraveData::new, WorldGraveData.NAME);
+            return overworld.getDataStorage().computeIfAbsent(new SavedData.Factory<>(WorldGraveData::new, WorldGraveData::load), WorldGraveData.NAME);
         }
 
         return null;
@@ -71,10 +75,11 @@ public class GraveManager {
         latestGraveEntry = entry;
     }
 
-    public static void populatePlayerGrave(Player player, Collection<ItemStack> drops) {
+    public static void populatePlayerGrave(Player player, Collection<ItemEntity> drops) {
         if (latestGraveEntry == null)
             return;
 
+        CompatManager.cacheModdedHandlers(player);
         ModRef.LOGGER.debug("Populating grave for " + player.getName().getString());
         generateGraveDataList(player, latestGraveEntry, drops);
     }
@@ -97,10 +102,9 @@ public class GraveManager {
         ModRef.LOGGER.info("Added grave entry to player " + player.getName().getString());
 
         latestGraveEntry = null;
-        droppedItems = null;
     }
 
-    public static void generateGraveDataList(Player player, PlayerGraveEntry entry, Collection<ItemStack> drops) {
+    public static void generateGraveDataList(Player player, PlayerGraveEntry entry, Collection<ItemEntity> drops) {
         List<IGraveData> dataList = new ArrayList<>();
         PlayerInventoryGraveData playerInvData = new PlayerInventoryGraveData(entry.inventory, drops);
         dataList.add(playerInvData);
@@ -109,10 +113,10 @@ public class GraveManager {
         if (xpHandling != ExperienceHandling.DROP) {
             int xp = 0; // if (xpHandling == ExperienceHandling.REMOVE)
             if (xpHandling == ExperienceHandling.KEEP_VANILLA) {
-                xp = player.getExperienceReward();
-                xp = net.minecraftforge.event.ForgeEventFactory.getExperienceDrop(player, player, xp);
+                xp = player.getExperienceReward((ServerLevel) player.level(), null);
+                xp = net.neoforged.neoforge.event.EventHooks.getExperienceDrop(player, player, xp);
             } else if (xpHandling == ExperienceHandling.KEEP_ALL) {
-                xp += player.experienceProgress * player.getXpNeededForNextLevel();
+                xp += (int) (player.experienceProgress * player.getXpNeededForNextLevel());
                 while (player.experienceLevel > 0) {
                     player.experienceLevel--;
                     xp += player.getXpNeededForNextLevel();
@@ -138,7 +142,6 @@ public class GraveManager {
         }
 
         playerInvData.addRemaining(drops);
-        playerInvData.addRemaining(droppedItems);
         entry.dataList = dataList;
     }
 

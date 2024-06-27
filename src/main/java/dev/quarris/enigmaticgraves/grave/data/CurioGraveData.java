@@ -2,15 +2,17 @@ package dev.quarris.enigmaticgraves.grave.data;
 
 import dev.quarris.enigmaticgraves.utils.ModRef;
 import dev.quarris.enigmaticgraves.utils.PlayerInventoryExtensions;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.util.LazyOptional;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
@@ -23,7 +25,7 @@ public class CurioGraveData implements IGraveData {
     public static final ResourceLocation NAME = ModRef.res("curios");
     private Tag data;
 
-    public CurioGraveData(ICuriosItemHandler curios, Collection<ItemStack> drops) {
+    public CurioGraveData(ICuriosItemHandler curios, Collection<ItemEntity> drops) {
         this.data = curios.writeTag();
 
         // Remove the curios from the drops
@@ -31,13 +33,13 @@ public class CurioGraveData implements IGraveData {
             ICurioStacksHandler curioItems = entry.getValue();
             NonNullList<ItemStack> curioStacksList = NonNullList.withSize(curioItems.getSlots(), ItemStack.EMPTY);
             NonNullList<ItemStack> curioCosmeticStacksList = NonNullList.withSize(curioItems.getSlots(), ItemStack.EMPTY);
-            Iterator<ItemStack> ite = drops.iterator();
+            Iterator<ItemEntity> ite = drops.iterator();
             Set<Integer> stackSlotsChecked = new HashSet<>();
             Set<Integer> cosmeticStacksSlotsChecked = new HashSet<>();
 
             loop:
             while (ite.hasNext()) {
-                ItemStack drop = ite.next();
+                ItemStack drop = ite.next().getItem();
                 for (int slot = 0; slot < curioItems.getSlots(); slot++) {
                     if (stackSlotsChecked.contains(slot))
                         continue;
@@ -67,14 +69,15 @@ public class CurioGraveData implements IGraveData {
     }
 
     public CurioGraveData(CompoundTag nbt) {
-        this.deserializeNBT(nbt);
+        HolderLookup.Provider provider = ServerLifecycleHooks.getCurrentServer().registryAccess();
+        this.deserializeNBT(provider, nbt);
     }
 
     @Override
     public void restore(Player player) {
         if (this.data == null) return;
 
-        LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosInventory(player);
+        Optional<ICuriosItemHandler> optional = CuriosApi.getCuriosInventory(player);
         optional.ifPresent(handler -> {
             handler.getCurios().values().forEach(curio -> {
                 IDynamicStackHandler stacks = curio.getStacks();
@@ -95,7 +98,7 @@ public class CurioGraveData implements IGraveData {
     }
 
     @Override
-    public CompoundTag write(CompoundTag nbt) {
+    public CompoundTag write(HolderLookup.Provider provider, CompoundTag nbt) {
         if (this.data != null) {
             nbt.put("Data", this.data);
         }
@@ -103,7 +106,7 @@ public class CurioGraveData implements IGraveData {
     }
 
     @Override
-    public void read(CompoundTag nbt) {
+    public void read(HolderLookup.Provider provider, CompoundTag nbt) {
         if (nbt.contains("Data")) {
             this.data = nbt.get("Data");
         }

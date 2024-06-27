@@ -4,10 +4,13 @@ import dev.quarris.enigmaticgraves.utils.ModRef;
 import dev.quarris.enigmaticgraves.utils.PlayerInventoryExtensions;
 import lain.mods.cos.api.CosArmorAPI;
 import lain.mods.cos.api.inventory.CAStacksBase;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -17,12 +20,13 @@ public class CosmeticArmorReworkedGraveData implements IGraveData {
     public static final ResourceLocation NAME = ModRef.res("cosmeticarmorreworked");
     public final CAStacksBase caStacksBase = new CAStacksBase();
 
-    public CosmeticArmorReworkedGraveData(CAStacksBase caStacksBase, Collection<ItemStack> drops) {
-        this.caStacksBase.deserializeNBT(caStacksBase.serializeNBT());
+    public CosmeticArmorReworkedGraveData(CAStacksBase caStacksBase, Collection<ItemEntity> drops) {
+        HolderLookup.Provider provider = ServerLifecycleHooks.getCurrentServer().registryAccess();
+        this.caStacksBase.deserializeNBT(provider, caStacksBase.serializeNBT(provider));
 
-        Iterator<ItemStack> ite = drops.iterator();
+        Iterator<ItemEntity> ite = drops.iterator();
         while(ite.hasNext()){
-            ItemStack drop = ite.next();
+            ItemStack drop = ite.next().getItem();
 
             for (int slot = 0; slot < caStacksBase.getSlots(); slot++){
                 ItemStack stack = caStacksBase.getStackInSlot(slot);
@@ -34,7 +38,8 @@ public class CosmeticArmorReworkedGraveData implements IGraveData {
     }
 
     public CosmeticArmorReworkedGraveData(CompoundTag nbt) {
-        this.deserializeNBT(nbt);
+        HolderLookup.Provider provider = ServerLifecycleHooks.getCurrentServer().registryAccess();
+        this.deserializeNBT(provider, nbt);
     }
 
     @Override
@@ -55,7 +60,8 @@ public class CosmeticArmorReworkedGraveData implements IGraveData {
             }
         }
 
-        lowPrio.deserializeNBT(this.caStacksBase.serializeNBT());
+        HolderLookup.Provider provider = ServerLifecycleHooks.getCurrentServer().registryAccess();
+        lowPrio.deserializeNBT(provider, this.caStacksBase.serializeNBT(provider));
     }
 
     @Override
@@ -64,13 +70,13 @@ public class CosmeticArmorReworkedGraveData implements IGraveData {
     }
 
     @Override
-    public CompoundTag write(CompoundTag nbt) {
-        nbt.put("caStacksBase", caStacksBase.serializeNBT());
+    public CompoundTag write(HolderLookup.Provider provider, CompoundTag nbt) {
+        nbt.put("caStacksBase", caStacksBase.serializeNBT(provider));
         return nbt;
     }
 
     @Override
-    public void read(CompoundTag nbt) {
-        caStacksBase.deserializeNBT(nbt.getCompound("caStacksBase"));
+    public void read(HolderLookup.Provider provider, CompoundTag nbt) {
+        caStacksBase.deserializeNBT(provider, nbt.getCompound("caStacksBase"));
     }
 }

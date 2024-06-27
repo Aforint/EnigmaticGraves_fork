@@ -2,21 +2,30 @@ package dev.quarris.enigmaticgraves.grave.data;
 
 import dev.quarris.enigmaticgraves.utils.ModRef;
 import dev.quarris.enigmaticgraves.utils.PlayerInventoryExtensions;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PlayerInventoryGraveData implements IGraveData {
 
@@ -24,7 +33,7 @@ public class PlayerInventoryGraveData implements IGraveData {
     private ListTag data;
     private List<ItemStack> remainingItems = new ArrayList<>();
 
-    public PlayerInventoryGraveData(Inventory inventory, Collection<ItemStack> drops) {
+    public PlayerInventoryGraveData(Inventory inventory, Collection<ItemEntity> drops) {
         Inventory graveInv = new Inventory(inventory.player);
         graveInv.replaceWith(inventory);
 
@@ -35,9 +44,9 @@ public class PlayerInventoryGraveData implements IGraveData {
         for (int slot = 0; slot < graveInv.getContainerSize(); slot++) {
             ItemStack stack = graveInv.getItem(slot);
 
-            Iterator<ItemStack> ite = drops.iterator();
+            Iterator<ItemEntity> ite = drops.iterator();
             while (ite.hasNext()) {
-                ItemStack drop = ite.next();
+                ItemStack drop = ite.next().getItem();
                 if (ItemStack.matches(stack, drop)) {
                     ite.remove();
                     continue loop;
@@ -48,7 +57,7 @@ public class PlayerInventoryGraveData implements IGraveData {
 
         for (int slot = 0; slot < graveInv.armor.size(); slot++) {
             ItemStack stack = graveInv.armor.get(slot);
-            if (EnchantmentHelper.hasBindingCurse(stack)) {
+            if (EnchantmentHelper.has(stack, EnchantmentEffectComponents.PREVENT_EQUIPMENT_DROP)) {
                 if (!PlayerInventoryExtensions.addItemToPlayerInventory(graveInv, -1, stack)) {
                     this.remainingItems.add(stack);
                 }
@@ -60,11 +69,13 @@ public class PlayerInventoryGraveData implements IGraveData {
     }
 
     public PlayerInventoryGraveData(CompoundTag nbt) {
-        this.deserializeNBT(nbt);
+        HolderLookup.Provider provider = ServerLifecycleHooks.getCurrentServer().registryAccess();
+        this.deserializeNBT(provider, nbt);
     }
 
-    public void addRemaining(Collection<ItemStack> remaining) {
-        this.remainingItems.addAll(remaining);
+    public void addRemaining(Collection<ItemEntity> remaining) {
+
+        this.remainingItems.addAll(remaining.stream().map(ItemEntity::getItem).toList());
     }
 
     @Override
@@ -93,23 +104,23 @@ public class PlayerInventoryGraveData implements IGraveData {
     }
 
     @Override
-    public CompoundTag write(CompoundTag nbt) {
+    public CompoundTag write(HolderLookup.Provider provider, CompoundTag nbt) {
         nbt.put("Data", this.data);
         if (this.remainingItems != null) {
             nbt.putInt("RemainingSize", this.remainingItems.size());
             NonNullList<ItemStack> items = NonNullList.of(ItemStack.EMPTY, this.remainingItems.toArray(new ItemStack[this.remainingItems.size()]));
-            nbt.put("Remaining", ContainerHelper.saveAllItems(new CompoundTag(), items));
+            nbt.put("Remaining", ContainerHelper.saveAllItems(new CompoundTag(), items, provider));
         }
         return nbt;
     }
 
     @Override
-    public void read(CompoundTag nbt) {
+    public void read(HolderLookup.Provider provider, CompoundTag nbt) {
         this.data = nbt.getList("Data", Tag.TAG_COMPOUND);
         if (nbt.contains("Remaining")) {
             int size = nbt.getInt("RemainingSize");
             NonNullList<ItemStack> items = NonNullList.withSize(size, ItemStack.EMPTY);
-            ContainerHelper.loadAllItems(nbt.getCompound("Remaining"), items);
+            ContainerHelper.loadAllItems(nbt.getCompound("Remaining"), items, provider);
             this.remainingItems.addAll(items);
         }
     }

@@ -7,6 +7,10 @@ import dev.quarris.enigmaticgraves.setup.Registry;
 import dev.quarris.enigmaticgraves.utils.ClientHelper;
 import dev.quarris.enigmaticgraves.utils.ModRef;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -16,6 +20,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerEntity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -26,8 +31,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.PushReaction;
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -48,8 +52,8 @@ public class GraveEntity extends Entity {
         BlockPos.MutableBlockPos spawnPos = new BlockPos.MutableBlockPos();
         boolean spawnBlockBelow = GraveManager.getSpawnPosition(player.level(), player.position(), spawnPos);
         if (spawnBlockBelow) {
-            ResourceLocation blockName = new ResourceLocation(GraveConfigs.COMMON.graveFloorBlock.get());
-            BlockState state = ForgeRegistries.BLOCKS.getValue(blockName).defaultBlockState();
+            ResourceLocation blockName = ResourceLocation.tryParse(GraveConfigs.COMMON.graveFloorBlock.get());
+            BlockState state = BuiltInRegistries.BLOCK.getHolder(blockName).get().value().defaultBlockState();
             player.level().setBlock(spawnPos.below(), state, 3);
             player.level().levelEvent(2001, spawnPos, Block.getId(state));
         }
@@ -90,9 +94,9 @@ public class GraveEntity extends Entity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        this.entityData.define(OWNER, Optional.empty());
-        this.entityData.define(OWNER_NAME, "");
+    protected void defineSynchedData(SynchedEntityData.Builder pBuilder) {
+        pBuilder.define(OWNER, Optional.empty());
+        pBuilder.define(OWNER_NAME, "");
     }
 
     @Override
@@ -113,7 +117,7 @@ public class GraveEntity extends Entity {
 
         if (player.isCreative()) {
             ItemStack heldItem = player.getItemInHand(hand);
-            if (heldItem.getItem() == Registry.GRAVE_FINDER_ITEM.get() && !heldItem.hasTag()) {
+            if (heldItem.getItem() == Registry.GRAVE_FINDER_ITEM.get() && !heldItem.has(DataComponents.ENTITY_DATA)) {
                 this.remove(RemovalReason.DISCARDED);
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
@@ -130,13 +134,11 @@ public class GraveEntity extends Entity {
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             if (stack.getItem() == Registry.GRAVE_FINDER_ITEM.get()) {
-                if (stack.hasTag()) {
-                    CompoundTag nbt = stack.getTag();
-                    if (nbt != null && nbt.contains("GraveUUID")) {
-                        if (nbt.getUUID("GraveUUID").equals(this.getUUID())) {
-                            player.getInventory().setItem(slot, ItemStack.EMPTY);
-                            break;
-                        }
+                CompoundTag nbt = stack.get(DataComponents.ENTITY_DATA).copyTag();
+                if (nbt != null) {
+                    if (nbt.getUUID("GraveUUID").equals(this.getUUID())) {
+                        player.getInventory().setItem(slot, ItemStack.EMPTY);
+                        break;
                     }
                 }
             }
@@ -166,8 +168,9 @@ public class GraveEntity extends Entity {
     protected void addAdditionalSaveData(CompoundTag compound) {
         CompoundTag graveNBT = new CompoundTag();
         ListTag contentNBT = new ListTag();
+        HolderLookup.Provider provider = ServerLifecycleHooks.getCurrentServer().registryAccess();
         for (IGraveData data : this.contents) {
-            contentNBT.add(data.serializeNBT());
+            contentNBT.add(data.serializeNBT(provider));
         }
         graveNBT.put("Content", contentNBT);
         if (this.getOwnerUUID() != null) {
@@ -187,7 +190,7 @@ public class GraveEntity extends Entity {
         ListTag contentNBT = graveNBT.getList("Content", Tag.TAG_COMPOUND);
         for (Tag inbt : contentNBT) {
             CompoundTag dataNBT = (CompoundTag) inbt;
-            ResourceLocation name = new ResourceLocation(dataNBT.getString("Name"));
+            ResourceLocation name = ResourceLocation.tryParse(dataNBT.getString("Name"));
             IGraveData data = GraveManager.GRAVE_DATA_SUPPLIERS.get(name).apply(dataNBT);
             dataList.add(data);
         }
@@ -221,10 +224,5 @@ public class GraveEntity extends Entity {
     @Override
     public boolean isPickable() {
         return true;
-    }
-
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
     }
 }

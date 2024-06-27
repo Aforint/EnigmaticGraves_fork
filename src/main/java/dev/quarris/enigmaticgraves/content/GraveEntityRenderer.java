@@ -9,8 +9,8 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.joml.AxisAngle4d;
 import org.joml.Quaternionf;
 
@@ -31,7 +31,7 @@ public class GraveEntityRenderer extends EntityRenderer<GraveEntity> {
         matrixStackIn.pushPose();
         matrixStackIn.mulPose(new Quaternionf(new AxisAngle4d(-entityYaw+180, 0, 1, 0)));
         super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
-        this.model.renderToBuffer(matrixStackIn, bufferIn.getBuffer(this.getRenderType(entityIn)), packedLightIn, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
+        this.model.renderToBuffer(matrixStackIn, bufferIn.getBuffer(this.getRenderType(entityIn)), packedLightIn, OverlayTexture.NO_OVERLAY, -1);
 
         /*
         FontRenderer font = this.getFontRendererFromRenderManager();

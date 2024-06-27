@@ -59,7 +59,7 @@ public class GraveModel extends EntityModel<Entity> {
     }
 
     @Override
-    public void renderToBuffer(PoseStack matrixStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+    public void renderToBuffer(PoseStack matrixStack, VertexConsumer buffer, int packedLight, int packedOverlay, int pColor) {
         matrixStack.pushPose();
         matrixStack.mulPose(new Quaternionf(new AxisAngle4d(180, 0, 1, 0)));
         matrixStack.translate(0, -1.5, 0);

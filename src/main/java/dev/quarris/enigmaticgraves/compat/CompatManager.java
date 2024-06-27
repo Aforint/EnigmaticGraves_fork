@@ -2,8 +2,8 @@ package dev.quarris.enigmaticgraves.compat;
 
 import dev.quarris.enigmaticgraves.utils.ModRef;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.fml.InterModComms;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.InterModComms;
+import net.neoforged.fml.ModList;
 
 public class CompatManager {
 

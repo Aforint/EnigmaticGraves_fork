@@ -1,9 +1,11 @@
 package dev.quarris.enigmaticgraves.grave.data;
 
 import dev.quarris.enigmaticgraves.utils.ModRef;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 public class ExperienceGraveData implements IGraveData {
 
@@ -16,7 +18,8 @@ public class ExperienceGraveData implements IGraveData {
     }
 
     public ExperienceGraveData(CompoundTag nbt) {
-        this.deserializeNBT(nbt);
+        HolderLookup.Provider provider = ServerLifecycleHooks.getCurrentServer().registryAccess();
+        this.deserializeNBT(provider, nbt);
     }
 
     @Override
@@ -25,13 +28,13 @@ public class ExperienceGraveData implements IGraveData {
     }
 
     @Override
-    public CompoundTag write(CompoundTag nbt) {
+    public CompoundTag write(HolderLookup.Provider provider, CompoundTag nbt) {
         nbt.putInt("XP", this.xp);
         return nbt;
     }
 
     @Override
-    public void read(CompoundTag nbt) {
+    public void read(HolderLookup.Provider provider, CompoundTag nbt) {
         this.xp = nbt.getInt("XP");
     }
 

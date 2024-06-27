@@ -3,6 +3,8 @@ package dev.quarris.enigmaticgraves.utils;
 import dev.quarris.enigmaticgraves.content.GraveEntity;
 import dev.quarris.enigmaticgraves.setup.Registry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -26,8 +28,9 @@ public class ClientHelper {
         if (stack == null)
             return false;
 
-        boolean hasTag = stack.hasTag() && stack.getTag().contains("GraveUUID");
-        UUID graveUUID = hasTag ? stack.getTag().getUUID("GraveUUID") : null;
+        CompoundTag nbt = stack.get(DataComponents.ENTITY_DATA).copyTag();
+        boolean hasTag = nbt.contains("GraveUUID");
+        UUID graveUUID = hasTag ? nbt.getUUID("GraveUUID") : null;
 
         // Can glow if:
         // In Creative or Spectator,

@@ -11,7 +11,7 @@ public class ModRef {
     public static final Logger LOGGER = LogManager.getLogger(EnigmaticGraves.class);
 
     public static ResourceLocation res(String res) {
-        return new ResourceLocation(ID, res);
+        return ResourceLocation.fromNamespaceAndPath(ID, res);
     }
 
 }

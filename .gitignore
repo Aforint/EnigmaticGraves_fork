@@ -20,9 +20,7 @@ build
 # other
 eclipse
 run
-mods
-libs
+runs
+run-data
 
-# Files from Forge MDK
-forge*changelog.txt
-/SECRET.txt
+repo
