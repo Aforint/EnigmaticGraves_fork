@@ -117,7 +117,7 @@ public class GraveEntity extends Entity {
 
         if (player.isCreative()) {
             ItemStack heldItem = player.getItemInHand(hand);
-            if (heldItem.getItem() == Registry.GRAVE_FINDER_ITEM.get() && !heldItem.has(DataComponents.ENTITY_DATA)) {
+            if (heldItem.getItem() == Registry.GRAVE_FINDER_ITEM.get() && !heldItem.has(DataComponents.CUSTOM_DATA)) {
                 this.remove(RemovalReason.DISCARDED);
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
@@ -134,7 +134,7 @@ public class GraveEntity extends Entity {
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             if (stack.getItem() == Registry.GRAVE_FINDER_ITEM.get()) {
-                CompoundTag nbt = stack.get(DataComponents.ENTITY_DATA).copyTag();
+                CompoundTag nbt = stack.get(DataComponents.CUSTOM_DATA).copyTag();
                 if (nbt != null) {
                     if (nbt.getUUID("GraveUUID").equals(this.getUUID())) {
                         player.getInventory().setItem(slot, ItemStack.EMPTY);

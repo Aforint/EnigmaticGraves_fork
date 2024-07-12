@@ -28,7 +28,7 @@ public class GraveFinderItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, Item.TooltipContext pContext, List<Component> tooltip, TooltipFlag flagIn) {
-        CustomData data = stack.get(DataComponents.ENTITY_DATA);
+        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
         if (data == null) {
             tooltip.add(Component.translatable("info.grave.remove_grave"));
             return;
@@ -49,13 +49,13 @@ public class GraveFinderItem extends Item {
             return InteractionResultHolder.pass(stack);
         }
 
-        if (!stack.has(DataComponents.ENTITY_DATA) || !stack.get(DataComponents.ENTITY_DATA).copyTag().contains("Pos")) {
+        if (!stack.has(DataComponents.CUSTOM_DATA) || !stack.get(DataComponents.CUSTOM_DATA).copyTag().contains("Pos")) {
             return InteractionResultHolder.pass(stack);
         }
 
         player.startUsingItem(hand);
         if (level instanceof ServerLevel) {
-            BlockPos pos = NbtUtils.readBlockPos(stack.get(DataComponents.ENTITY_DATA).copyTag(), "Pos").get();
+            BlockPos pos = NbtUtils.readBlockPos(stack.get(DataComponents.CUSTOM_DATA).copyTag(), "Pos").get();
             Component result = ComponentUtils.wrapInSquareBrackets(Component.translatable("chat.coordinates", pos.getX(), pos.getY(), pos.getZ()))
                 .withStyle((style) -> style.withColor(ChatFormatting.GREEN)
                     .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tp @s " + pos.getX() + " " + pos.getY() + " " + pos.getZ()))

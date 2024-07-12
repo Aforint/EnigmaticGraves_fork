@@ -39,7 +39,7 @@ public class CommonEvents {
         GraveManager.prepPlayerGrave(player);
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void playerDrops(LivingDropsEvent event){
         if (!(event.getEntity() instanceof Player player) || event.getEntity().level().isClientSide)
             return;
@@ -66,7 +66,7 @@ public class CommonEvents {
         CompoundTag nbt = new CompoundTag();
         nbt.put("Pos", NbtUtils.writeBlockPos(latestEntry.gravePos));
         nbt.putUUID("GraveUUID", latestEntry.graveUUID);
-        graveFinder.set(DataComponents.ENTITY_DATA, CustomData.of(nbt));
+        graveFinder.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
         event.getEntity().addItem(graveFinder);
     }
 

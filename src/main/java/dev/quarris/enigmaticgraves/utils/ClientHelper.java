@@ -28,7 +28,7 @@ public class ClientHelper {
         if (stack == null)
             return false;
 
-        CompoundTag nbt = stack.get(DataComponents.ENTITY_DATA).copyTag();
+        CompoundTag nbt = stack.get(DataComponents.CUSTOM_DATA).copyTag();
         boolean hasTag = nbt.contains("GraveUUID");
         UUID graveUUID = hasTag ? nbt.getUUID("GraveUUID") : null;
 

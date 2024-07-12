@@ -72,6 +72,7 @@ public class GraveManager {
 
         ModRef.LOGGER.info("Preparing grave for " + player.getName().getString());
         PlayerGraveEntry entry = new PlayerGraveEntry(player.getInventory());
+        CompatManager.cacheModdedHandlers(player);
         latestGraveEntry = entry;
     }
 
@@ -79,7 +80,6 @@ public class GraveManager {
         if (latestGraveEntry == null)
             return;
 
-        CompatManager.cacheModdedHandlers(player);
         ModRef.LOGGER.debug("Populating grave for " + player.getName().getString());
         generateGraveDataList(player, latestGraveEntry, drops);
     }
