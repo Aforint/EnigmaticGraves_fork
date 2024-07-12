@@ -8,6 +8,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
@@ -23,7 +24,7 @@ public class CurioGraveData implements IGraveData {
     public static final ResourceLocation NAME = ModRef.res("curios");
     private Tag data;
 
-    public CurioGraveData(ICuriosItemHandler curios, Collection<ItemStack> drops) {
+    public CurioGraveData(ICuriosItemHandler curios, Collection<ItemEntity> drops) {
         this.data = curios.writeTag();
 
         // Remove the curios from the drops
@@ -31,13 +32,13 @@ public class CurioGraveData implements IGraveData {
             ICurioStacksHandler curioItems = entry.getValue();
             NonNullList<ItemStack> curioStacksList = NonNullList.withSize(curioItems.getSlots(), ItemStack.EMPTY);
             NonNullList<ItemStack> curioCosmeticStacksList = NonNullList.withSize(curioItems.getSlots(), ItemStack.EMPTY);
-            Iterator<ItemStack> ite = drops.iterator();
+            Iterator<ItemEntity> ite = drops.iterator();
             Set<Integer> stackSlotsChecked = new HashSet<>();
             Set<Integer> cosmeticStacksSlotsChecked = new HashSet<>();
 
             loop:
             while (ite.hasNext()) {
-                ItemStack drop = ite.next();
+                ItemStack drop = ite.next().getItem();
                 for (int slot = 0; slot < curioItems.getSlots(); slot++) {
                     if (stackSlotsChecked.contains(slot))
                         continue;

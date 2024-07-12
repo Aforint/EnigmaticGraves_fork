@@ -6,6 +6,7 @@ import lain.mods.cos.api.CosArmorAPI;
 import lain.mods.cos.api.inventory.CAStacksBase;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -17,12 +18,12 @@ public class CosmeticArmorReworkedGraveData implements IGraveData {
     public static final ResourceLocation NAME = ModRef.res("cosmeticarmorreworked");
     public final CAStacksBase caStacksBase = new CAStacksBase();
 
-    public CosmeticArmorReworkedGraveData(CAStacksBase caStacksBase, Collection<ItemStack> drops) {
+    public CosmeticArmorReworkedGraveData(CAStacksBase caStacksBase, Collection<ItemEntity> drops) {
         this.caStacksBase.deserializeNBT(caStacksBase.serializeNBT());
 
-        Iterator<ItemStack> ite = drops.iterator();
+        Iterator<ItemEntity> ite = drops.iterator();
         while(ite.hasNext()){
-            ItemStack drop = ite.next();
+            ItemStack drop = ite.next().getItem();
 
             for (int slot = 0; slot < caStacksBase.getSlots(); slot++){
                 ItemStack stack = caStacksBase.getStackInSlot(slot);

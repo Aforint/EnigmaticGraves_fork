@@ -14,6 +14,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -25,29 +26,24 @@ import java.util.LinkedList;
 @Mod.EventBusSubscriber(modid = ModRef.ID)
 public class CommonEvents {
 
-    // Start collecting dropped items from mods at the start of the player death event.
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void onPlayerDeathFirst(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof Player) ||
-            event.getEntity().level().isClientSide ||
-            event.getEntity().level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) return;
-
-        GraveManager.droppedItems = new ArrayList<>();
-    }
-
     // Once everything is collected, check to see if someone has cancelled the event, if it was cancelled then the player has not actually died, and we have to ignore any items we have collected.
     @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
     public static void onPlayerDeathLast(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof Player) || event.getEntity().level().isClientSide)
+        if (!(event.getEntity() instanceof Player player) ||
+                event.getEntity().level().isClientSide ||
+                event.isCanceled())
             return;
 
-        if (event.isCanceled()) {
-            GraveManager.droppedItems = null;
-            return;
-        }
-
-        Player player = (Player) event.getEntity();
         GraveManager.prepPlayerGrave(player);
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void playerDrops(LivingDropsEvent event){
+        if (!(event.getEntity() instanceof Player player) || event.getEntity().level().isClientSide)
+            return;
+
+        GraveManager.populatePlayerGrave(player, event.getDrops());
+        GraveManager.spawnPlayerGrave(player);
     }
 
     @SubscribeEvent
@@ -69,14 +65,6 @@ public class CommonEvents {
         nbt.put("Pos", NbtUtils.writeBlockPos(latestEntry.gravePos));
         nbt.putUUID("GraveUUID", latestEntry.graveUUID);
         event.getEntity().addItem(graveFinder);
-    }
-
-    @SubscribeEvent
-    public static void addDroppedItems(EntityJoinLevelEvent event) {
-        if (GraveManager.droppedItems != null && event.getEntity() instanceof ItemEntity) {
-            GraveManager.droppedItems.add(((ItemEntity) event.getEntity()).getItem());
-            event.setCanceled(true);
-        }
     }
 
     @SubscribeEvent

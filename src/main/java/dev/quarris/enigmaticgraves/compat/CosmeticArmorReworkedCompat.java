@@ -5,9 +5,11 @@ import dev.quarris.enigmaticgraves.grave.data.IGraveData;
 import lain.mods.cos.api.CosArmorAPI;
 import lain.mods.cos.api.inventory.CAStacksBase;
 import lain.mods.cos.impl.ModConfigs;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import java.awt.event.ItemEvent;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +30,7 @@ public class CosmeticArmorReworkedCompat{
     }
 
 
-    public static IGraveData generateCosmeticArmorReworkedGraveData(Player player, Collection<ItemStack> drops) {
+    public static IGraveData generateCosmeticArmorReworkedGraveData(Player player, Collection<ItemEntity> drops) {
         if (CACHED_COSMETICARMORREWORKEDS.containsKey(player.getUUID())) {
             IGraveData data = new CosmeticArmorReworkedGraveData(CACHED_COSMETICARMORREWORKEDS.get(player.getUUID()), drops);
             CACHED_COSMETICARMORREWORKEDS.remove(player.getUUID());

@@ -14,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
@@ -31,7 +32,6 @@ public class GraveManager {
 
     public static final HashMap<ResourceLocation, Function<CompoundTag, IGraveData>> GRAVE_DATA_SUPPLIERS = new HashMap<>();
     public static PlayerGraveEntry latestGraveEntry;
-    public static List<ItemStack> droppedItems;
     public static final DateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss");
 
     public static void init() {
@@ -68,10 +68,11 @@ public class GraveManager {
 
         ModRef.LOGGER.info("Preparing grave for " + player.getName().getString());
         PlayerGraveEntry entry = new PlayerGraveEntry(player.getInventory());
+        CompatManager.cacheModdedHandlers(player);
         latestGraveEntry = entry;
     }
 
-    public static void populatePlayerGrave(Player player, Collection<ItemStack> drops) {
+    public static void populatePlayerGrave(Player player, Collection<ItemEntity> drops) {
         if (latestGraveEntry == null)
             return;
 
@@ -97,10 +98,9 @@ public class GraveManager {
         ModRef.LOGGER.info("Added grave entry to player " + player.getName().getString());
 
         latestGraveEntry = null;
-        droppedItems = null;
     }
 
-    public static void generateGraveDataList(Player player, PlayerGraveEntry entry, Collection<ItemStack> drops) {
+    public static void generateGraveDataList(Player player, PlayerGraveEntry entry, Collection<ItemEntity> drops) {
         List<IGraveData> dataList = new ArrayList<>();
         PlayerInventoryGraveData playerInvData = new PlayerInventoryGraveData(entry.inventory, drops);
         dataList.add(playerInvData);
@@ -138,7 +138,6 @@ public class GraveManager {
         }
 
         playerInvData.addRemaining(drops);
-        playerInvData.addRemaining(droppedItems);
         entry.dataList = dataList;
     }
 

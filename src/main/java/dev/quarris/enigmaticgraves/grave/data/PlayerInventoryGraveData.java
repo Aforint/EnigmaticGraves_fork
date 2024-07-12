@@ -8,6 +8,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -24,7 +25,7 @@ public class PlayerInventoryGraveData implements IGraveData {
     private ListTag data;
     private List<ItemStack> remainingItems = new ArrayList<>();
 
-    public PlayerInventoryGraveData(Inventory inventory, Collection<ItemStack> drops) {
+    public PlayerInventoryGraveData(Inventory inventory, Collection<ItemEntity> drops) {
         Inventory graveInv = new Inventory(inventory.player);
         graveInv.replaceWith(inventory);
 
@@ -35,9 +36,9 @@ public class PlayerInventoryGraveData implements IGraveData {
         for (int slot = 0; slot < graveInv.getContainerSize(); slot++) {
             ItemStack stack = graveInv.getItem(slot);
 
-            Iterator<ItemStack> ite = drops.iterator();
+            Iterator<ItemEntity> ite = drops.iterator();
             while (ite.hasNext()) {
-                ItemStack drop = ite.next();
+                ItemStack drop = ite.next().getItem();
                 if (ItemStack.matches(stack, drop)) {
                     ite.remove();
                     continue loop;
@@ -63,8 +64,8 @@ public class PlayerInventoryGraveData implements IGraveData {
         this.deserializeNBT(nbt);
     }
 
-    public void addRemaining(Collection<ItemStack> remaining) {
-        this.remainingItems.addAll(remaining);
+    public void addRemaining(Collection<ItemEntity> remaining) {
+        this.remainingItems.addAll(remaining.stream().map(ItemEntity::getItem).toList());
     }
 
     @Override
