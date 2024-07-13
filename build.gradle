@@ -18,11 +18,6 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
-mixin {
-    add sourceSets.main, "${mod_id}.refmap.json"
-    config "${mod_id}.mixins.json"
-}
-
 minecraft {
     mappings channel: mappings_channel, version: "${mappings_version}-${mc_version}"
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
