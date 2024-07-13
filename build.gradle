@@ -7,8 +7,6 @@ plugins {
     id 'net.neoforged.gradle.mixin' version '7.0.142'
 }
 
-apply from: 'https://gist.githubusercontent.com/Technici4n/facbcdf18ce1a556b76e6027180c32ce/raw/059ab3d504a590461746fc6e3065159f4932a960/classremapper.gradle'
-
 tasks.named('wrapper', Wrapper).configure {
     // Define wrapper values here so as to not have to always do so when updating gradlew.properties.
     // Switching this to Wrapper.DistributionType.ALL will download the full gradle sources that comes with

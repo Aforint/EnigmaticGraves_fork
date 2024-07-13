@@ -17,19 +17,22 @@ import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
+import top.theillusivec4.curios.common.capability.CurioInventoryCapability;
 
 import java.util.*;
 
 public class CurioGraveData implements IGraveData {
 
     public static final ResourceLocation NAME = ModRef.res("curios");
-    private Tag data;
+    private ListTag data;
 
-    public CurioGraveData(ICuriosItemHandler curios, Collection<ItemEntity> drops) {
-        this.data = curios.writeTag();
+    public CurioGraveData(ListTag curios, Collection<ItemEntity> drops, Player player) {
+        this.data = curios.copy();
+        ICuriosItemHandler cur = new CurioInventoryCapability(player);
+        cur.loadInventory(curios);
 
         // Remove the curios from the drops
-        for (Map.Entry<String, ICurioStacksHandler> entry : curios.getCurios().entrySet()) {
+        for (Map.Entry<String, ICurioStacksHandler> entry : cur.getCurios().entrySet()) {
             ICurioStacksHandler curioItems = entry.getValue();
             NonNullList<ItemStack> curioStacksList = NonNullList.withSize(curioItems.getSlots(), ItemStack.EMPTY);
             NonNullList<ItemStack> curioCosmeticStacksList = NonNullList.withSize(curioItems.getSlots(), ItemStack.EMPTY);
@@ -44,11 +47,12 @@ public class CurioGraveData implements IGraveData {
                     if (stackSlotsChecked.contains(slot))
                         continue;
 
-                    ItemStack stack = curioItems.getStacks().getStackInSlot(slot);
+                    ItemStack stack = curioItems.getStacks().getStackInSlot(slot);;
                     if (ItemStack.matches(stack, drop)) {
                         stackSlotsChecked.add(slot);
                         curioStacksList.set(slot, drop);
                         ite.remove();
+                        curioItems.getStacks().setStackInSlot(slot, ItemStack.EMPTY);
                         continue loop;
                     }
                 }
@@ -61,6 +65,7 @@ public class CurioGraveData implements IGraveData {
                         cosmeticStacksSlotsChecked.add(slot);
                         curioCosmeticStacksList.set(slot, drop);
                         ite.remove();
+                        curioItems.getStacks().setStackInSlot(slot, ItemStack.EMPTY);
                         continue loop;
                     }
                 }
@@ -88,7 +93,7 @@ public class CurioGraveData implements IGraveData {
                     }
                 }
             });
-            handler.readTag(this.data);
+            handler.loadInventory(this.data);
         });
     }
 
@@ -108,7 +113,7 @@ public class CurioGraveData implements IGraveData {
     @Override
     public void read(HolderLookup.Provider provider, CompoundTag nbt) {
         if (nbt.contains("Data")) {
-            this.data = nbt.get("Data");
+            this.data = (ListTag) nbt.get("Data");
         }
     }
 
